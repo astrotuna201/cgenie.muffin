@@ -1428,15 +1428,14 @@ CONTAINS
        !       (a) NO3 uptake by 'normal' phytoplankton, plus
        !       (b) N2 fixation ... converted to NO3 'uptake' but at a different N:P compared to 'normal' phytoplankton
        !       once the N2 uptake (anomoly) is calculated, the remaining terms are adjusted based on the N2 anomoly
-       ! NOTE: assuemd stiochometry: 2NO3- + 2H+ <-> (5/2)O2 + N2 + H2O
+       ! NOTE: assuemd stoichiometry: 2NO3- + 2H+ <-> (5/2)O2 + N2 + H2O
        !                             NO3- + H2O + 2H+ <-> 2O2 + NH4+
        ! NOTE: because the N2 uptake (anomoly) is being used, no prior sources or sinks of N2 are assumed
+       ! N2 fixation nutrient uptake adjustment assuming equation - Fanny (June 2018)
+       !       N2uptake = 0.5*NPdiaz*dPO4_2
        loc_bio_uptake(io_N2,loc_k_mld:n_k) = &
-            & 0.5* &
-            & ( &
-            &   (par_bio_NPdiaz/loc_bio_NP) / ((1.0/loc_frac_N2fix - 1.0) + (par_bio_NPdiaz/loc_bio_NP)) &
-            & )* &
-            & loc_bio_uptake(io_NO3,loc_k_mld:n_k)
+            & loc_bio_uptake(io_N2,loc_k_mld:n_k) + &
+            & 0.5 * loc_frac_N2fix * loc_bio_uptake(io_NO3,loc_k_mld:n_k)
        loc_bio_uptake(io_O2,loc_k_mld:n_k)  = loc_bio_uptake(io_O2,loc_k_mld:n_k)  + (5.0/2.0)*loc_bio_uptake(io_N2,loc_k_mld:n_k)
        loc_bio_uptake(io_ALK,loc_k_mld:n_k) = loc_bio_uptake(io_ALK,loc_k_mld:n_k) + 2.0*loc_bio_uptake(io_N2,loc_k_mld:n_k)
        loc_bio_uptake(io_NO3,loc_k_mld:n_k) = loc_bio_uptake(io_NO3,loc_k_mld:n_k) - 2.0*loc_bio_uptake(io_N2,loc_k_mld:n_k)
@@ -2129,11 +2128,16 @@ CONTAINS
              loc_NH4_oxidation = dum_dtyr*(18250.0/conv_m3_kg)*loc_NH4*loc_O2
           CASE ('Fanny')
 	     ! Second order equation of enzyme kinetics which accounts for both O2 and NH4 limitations on nitrification
-             loc_potO2cap = ocn(io_O2,dum_i,dum_j,k) + bio_remin(io_O2,dum_i,dum_j,k)
-             loc_NH4_oxidation = dum_dtyr*par_nitri_mu*loc_NH4*loc_potO2cap &
-                  & /(par_nitri_c0_NH4*par_nitri_c0_O2 +par_nitri_c0_O2*loc_NH4 &
-                  & +par_nitri_c0_NH4*loc_potO2cap +loc_NH4*loc_potO2cap) &
-                  & *min(loc_NH4,loc_potO2cap*par_bio_red_POP_PON/(-par_bio_red_POP_PO2))
+	     ! Modified to use local O2 rather than potO2cap - Fanny (Jun 2018)
+             loc_NH4_oxidation = dum_dtyr*par_nitri_mu*loc_NH4*loc_O2 &
+                & /(par_nitri_c0_NH4*par_nitri_c0_O2 +par_nitri_c0_O2*loc_NH4 &
+                & +par_nitri_c0_NH4*loc_O2 +loc_NH4*loc_O2) &
+                & *min(loc_NH4,loc_O2*par_bio_red_POP_PON/(-par_bio_red_POP_PO2))
+             !!! loc_potO2cap = ocn(io_O2,dum_i,dum_j,k) + bio_remin(io_O2,dum_i,dum_j,k)
+             !!! loc_NH4_oxidation = dum_dtyr*par_nitri_mu*loc_NH4*loc_potO2cap &
+             !!!     & /(par_nitri_c0_NH4*par_nitri_c0_O2 +par_nitri_c0_O2*loc_NH4 &
+             !!!     & +par_nitri_c0_NH4*loc_potO2cap +loc_NH4*loc_potO2cap) &
+             !!!     & *min(loc_NH4,loc_potO2cap*par_bio_red_POP_PON/(-par_bio_red_POP_PO2))
              If (loc_NH4_oxidation > min(loc_NH4,loc_potO2cap*par_bio_red_POP_PON/(-par_bio_red_POP_PO2))) then
                 loc_NH4_oxidation = min(loc_NH4,loc_potO2cap*loc_potO2cap*par_bio_red_POP_PON/(-par_bio_red_POP_PO2))
              end if
