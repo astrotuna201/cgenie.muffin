@@ -18,7 +18,7 @@ MODULE sedgem_box_archer1991_sedflx
   INTEGER,PARAMETER::nzmax_co3 = 30
   INTEGER,PARAMETER::nmax      = 300
   REAL,PARAMETER,DIMENSION(nzmax)::delz = (/0.0,0.5,0.5,1.0,2.0,3.0,3.0,5.0,5.0,5.0/)
-
+  external DGESV
   
 CONTAINS
 
@@ -195,7 +195,8 @@ CONTAINS
     REAL,INTENT(in)::rainorg
     REAL,INTENT(inout)::rc,zrct,smrct,rmserr
     REAL,INTENT(inout),DIMENSION(:)::dbpls,dbmin,pore,orggg,orgml,z
-    
+    integer:: indx(nzmax)
+    integer:: info
     REAL:: res(nzmax), dres(nzmax,3)
     REAL:: react(nzmax), dreac(nzmax)
     REAL:: a(nzmax,nzmax), b(nzmax,1)
@@ -293,8 +294,9 @@ CONTAINS
 ! want dres(3,3) in a(2,1), dres(4,3) in a(3,2) etc
     END DO
     
-    CALL gaussj(a,kmax-1,b,1)
-    
+!    CALL gaussj(a,kmax-1,b,1)
+    CALL DGESV( kmax-1, 1, a, nzmax, indx, b, nzmax, INFO )
+    if (info /= 0) error_Archer = .TRUE.   
 ! update the concentration array
     rmserr = 0
     DO i=1,kmax-1
@@ -359,7 +361,8 @@ CONTAINS
 
     REAL:: dfplus(nzmax), dfzero(nzmax), dfmins(nzmax)
     REAL:: a(nzmax,nzmax),b(nzmax,1),r(nzmax)
-
+    integer:: indx(nzmax)
+    integer:: info
     INTEGER::j,k
     
     DO j=2,kmax-1
@@ -402,8 +405,9 @@ CONTAINS
       b(j,1) = - r(j+1)
     END DO
 
-    CALL gaussj(a,kmax-1,b,1)
-    
+    !CALL gaussj(a,kmax-1,b,1)
+    CALL DGESV( kmax-1, 1, a, nzmax, indx, b, nzmax, INFO )
+    if (info /= 0) error_Archer = .TRUE.
     smrct = 0.
     DO j=2,kmax
       o2(j) = o2(j) + b(j-1,1) 
@@ -533,6 +537,8 @@ CONTAINS
     REAL,INTENT(in),DIMENSION(:)::calgg
     REAL,INTENT(inout),DIMENSION(:)::cal_c
     REAL,INTENT(inout),DIMENSION(:,:)::resp_c,dplus,dminus,carb
+    integer:: indx(nzmax_co3)
+    integer:: info
 
     ! note:'nzmax_co3' must be at least 3 times higher than for other routines
 
@@ -684,8 +690,9 @@ CONTAINS
        END DO
     END DO
 
-    CALL gaussj(a,(kmax-1)*3,b,1)
-
+    !CALL gaussj(a,(kmax-1)*3,b,1)
+    CALL DGESV( (kmax-1)*3, 1, a, nzmax_co3, indx, b, nzmax_co3, INFO )
+    if (info /= 0) error_Archer = .TRUE. 
     weight = 1.0
     DO k=2,kmax
        trialw = - 0.75 * carb(k,3) / b( (k-2)*3+3, 1 )

@@ -42,8 +42,8 @@ F77=gfortran
 #F77=g95.exe
 
 # === C Compiler (gcc/cc) ===
-CC=gcc
-CXX=g++
+CC=clang
+CXX=clang++++
 #CXX=cl.exe
 #CC=cc
 
@@ -54,11 +54,11 @@ BUILD=SHIP
 #BUILD=PROFILE
 #BUILD=BOUNDS
 # === Machine type (LINUX/SLOARIS/SGI) ===
-MACHINE=LINUX
+#MACHINE=LINUX
 #MACHINE=SGI
 #MACHINE=SOLARIS
 #MACHINE=WIN32
-#MACHINE=OSX
+MACHINE=OSX
 
 # === Extension for module files ===
 MODEXT=mod
@@ -88,5 +88,5 @@ NETCDF_DIR=/usr/local
 ### Ben Mac Pro ###
 ###NETCDF_DIR=/opt/local
 
-NETCDF_NAME=netcdf
+NETCDF_NAME=netcdff
 

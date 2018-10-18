@@ -316,18 +316,17 @@ ifeq ($(F77),gfortran)
   F77FLAGS += -x f77-cpp-input -ffixed-line-length-80
   F90FLAGS += -x f95-cpp-input -ffree-line-length-none
   FFLAGS += -Wall -fimplicit-none
-  FFLAGS += -fopenmp
+  FFLAGS += -fopenmp -framework Accelerate
 ###  LDFLAGS += -static
   LDFLAGS += -fopenmp
   ifeq ($(BUILD),SHIP)
-    FFLAGS += -O2
-    FFLAGS += -O3 
+    FFLAGS += -Ofast -g -ftree-vectorize
     FFLAGS += -funroll-loops 
-    FFLAGS += -msse
+    FFLAGS += -msse -mavx -march=native 
     FFLAGS += -fno-automatic
   endif
   ifeq ($(BUILD),DEBUG)
-    FFLAGS += -g -ffpe-trap=zero,overflow,invalid -O0 -Wall -fbounds-check
+    FFLAGS += -g -ffpe-trap=zero,overflow,invalid -Og -Wall -fbounds-check
     FFLAGS += -Wextra
     #FFLAGS += -pedantic
     FFLAGS += -fbacktrace
